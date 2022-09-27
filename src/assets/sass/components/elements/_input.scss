@@ -1,0 +1,26 @@
+.input {
+    @apply
+        p-2
+        rounded
+        mb-2
+        w-full;
+    background-color: $second-color;
+    color: $font-color;
+
+    &--full { @apply w-full; }
+    &--75 { @apply w-3/4; }
+    &--50 { @apply w-1/2; }
+
+    &::placeholder {
+        color: $font-color-lighter;
+    }
+
+    &:focus {
+        @apply
+            outline-none;
+    }
+
+    &--large {
+        @apply h-12;
+    }
+}

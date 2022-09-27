@@ -1,0 +1,25 @@
+.header {
+    @apply
+        flex
+        items-center
+        p-5
+        mb-3
+        text-white;
+
+    &__logo {
+        @apply mr-5;
+        a { @apply block; }
+    }
+
+    &__image { @apply mr-1 h-12; }
+
+    &__search { @apply w-2/5; }
+
+}
+
+
+@screen md {}
+
+@screen lg {}
+
+@screen xl {}

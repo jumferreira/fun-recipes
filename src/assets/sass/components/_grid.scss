@@ -1,0 +1,28 @@
+#app {
+    @apply
+        min-h-screen
+        flex
+        flex-col
+        justify-between
+        items-center
+        p-5;
+
+    background-color: $third-color;
+}
+
+.container {
+    @apply
+        mx-auto
+        relative;
+
+    max-width: 75rem;
+}
+
+.main {
+    @apply
+        flex-grow
+        flex-shrink-0
+        w-11/12;
+    border-radius: 50px;
+    background-color: $main-color;
+}
