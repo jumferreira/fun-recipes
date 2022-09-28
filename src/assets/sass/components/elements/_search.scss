@@ -1,0 +1,37 @@
+.search {
+    @apply relative;
+
+    &--active > input {
+        @apply rounded-b-none;
+    }
+
+    &__results {
+        @apply
+            absolute
+            z-20
+            w-full
+            p-2;
+        background-color: $second-color;
+
+        &-item {
+            @apply mb-3;
+
+            &-category {
+                @apply
+                    text-sm
+                    uppercase
+                    tracking-widest;
+            }
+            &-meal {
+                @apply
+                    mb-0.5
+                    text-xs
+                    text-left
+                    block;
+
+                &:focus { @apply outline-none; }
+            }
+
+        }
+    }
+}
