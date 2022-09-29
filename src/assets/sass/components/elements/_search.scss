@@ -1,16 +1,29 @@
 .search {
     @apply relative;
 
-    &--active > input {
+    &--active input {
         @apply rounded-b-none;
+    }
+
+    &__icon {
+        @apply
+            text-stone-800
+            text-3xl
+            absolute
+            top-2
+            right-2.5;
     }
 
     &__results {
         @apply
             absolute
             z-20
+            max-h-40
+            overflow-y-auto
             w-full
-            p-2;
+            p-2
+            text-stone-800
+            rounded-b;
         background-color: $second-color;
 
         &-item {
@@ -19,6 +32,7 @@
             &-category {
                 @apply
                     text-sm
+                    font-medium
                     uppercase
                     tracking-widest;
             }

@@ -1,0 +1,32 @@
+.modal {
+    @apply
+        p-4
+        h-full;
+    background-color: $third-color;
+
+    &_header {
+        @apply
+            flex
+            justify-between
+            items-baseline
+            mb-8;
+    }
+
+    &_title {
+        @apply
+            text-center
+            text-2xl;
+
+        color: $main-color;
+    }
+
+    &_close {}
+
+    &_body {}
+
+    &_footer {
+        @apply
+       text-right
+       mt-2;
+    }
+}

@@ -2,9 +2,9 @@
     @apply
         flex
         items-center
+        justify-between
         p-8
         mb-3
-        text-white
         h-32;
 
     &__logo {
@@ -12,14 +12,29 @@
         a {
             @apply
                 text-white
-                block
-                shadow;
+                block;
         }
     }
 
-    &__image { @apply mr-1 h-12; }
+    &__image { @apply mr-1 h-20; }
 
-    &__search { @apply w-2/5; }
+    &__search { @apply w-3/5; }
+
+    &__buttons {
+        @apply flex;
+
+        button {
+            @apply
+                w-24
+                ml-1.5
+                underline
+                uppercase
+                tracking-widest
+                text-sm;
+
+            &:focus { @apply outline-none; }
+        }
+    }
 
 }
 

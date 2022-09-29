@@ -3,45 +3,27 @@
     <main class="main">
       <header class="header">
         <div class="header__logo">
-          <a href="">
-            Recipes
-<!--            <img class="header__image" src="./assets/img/logo.png" alt="recipes">-->
+          <a href="/">
+            <img class="header__image" src="./assets/img/header_logo.png" alt="recipes">
           </a>
         </div>
 
         <div class="header__search">
-          <div class="search" :class="searchHasResult ? 'search--active' : ''">
-            <input
-                type="text"
-                class="input input--large"
-                placeholder="Search recipes"
-                v-model="searchQuery"
-                @input="getMealByName"
-            >
-
-            <div v-if="searchHasResult" class="search__results">
-              <ul>
-                <li
-                    v-for="(item, key, index) in meals"
-                    :key="`search-result-category-${index}`"
-                    class="search__results-item"
-                >
-                  <p class="search__results-item-category">{{ key }}</p>
-                  <button
-                      v-for="(result, index) in item"
-                      :key="`search-result-item-${index}`"
-                      class="search__results-item-meal"
-                      @click="selectMeal(result.idMeal)"
-                  >
-                    {{ result.strMeal }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
+          <search-bar
+              :results="meals"
+              :hasCategory="true"
+              @search="getMealByName"
+              @item-selected="getMealById"
+              @clear-results="clearSearchVariablesData"
+          ></search-bar>
         </div>
 
-        <div class="header__buttons"></div>
+        <div class="header__buttons">
+          <button @click="openModal">advanced search</button>
+          <button @click="generatePDF">
+            <font-awesome-icon icon="fa-solid fa-print" class="text-2xl"/>
+          </button>
+        </div>
       </header>
 
       <div class="recipe">
@@ -89,13 +71,38 @@
           ></iframe>
         </div>
       </div>
+
+      <modal
+          name="orderModal"
+          :width="365"
+          :height="360"
+      >
+        <div class="modal">
+          <div class="modal_header">
+            <p class="modal_title">Search for categories and/or categories</p>
+
+            <button class="modal_close" @click="closeModal()">
+              <font-awesome-icon icon="fa-solid fa-xmark"/>
+            </button>
+          </div>
+
+          <div class="modal_body">
+            <search-bar
+                :results="meals"
+                @search="getCompleteSearchResults"
+                @item-selected="getMealById"
+                @clear-results="clearSearchVariablesData"
+            ></search-bar>
+          </div>
+        </div>
+      </modal>
     </main>
   </div>
 </template>
-
 <script>
-import { debounce as _debounce, groupBy as _groupBy } from 'lodash';
 import axios from 'axios';
+import { jsPDF } from "jspdf";
+import { debounce as _debounce, groupBy as _groupBy } from 'lodash';
 export default {
   name: 'App',
   components: {},
@@ -105,58 +112,65 @@ export default {
     meals: [],
     originalMeals: [],
     instructions: [],
-    searchQuery: null,
+    line: 0,
   }),
   computed: {
     videoUrl() {
       const data = this.meal.strYoutube.split('watch?v=');
       return `${data[0]}embed/${data[1]}`;
     },
-    searchHasResult() {
-      return this.searchQuery && Object.keys(this.meals).length > 0;
-    },
   },
   mounted() {
-    // this.getMealById();
     this.getRandomMeal();
   },
   methods: {
     getRandomMeal() {
-      // eslint-disable-next-line no-undef
       axios.get(`${this.baseUrl}/random.php`).then((response) => {
-        this.meal = {};
-        this.instructions = [];
+        this.clearVariablesData()
         this.meal = response.data.meals[0];
-        this.instructions = this.meal.strInstructions.split("\r\n").filter(item => item && !item.match(/(step|STEP|Step) \d+$/g) && !item.match(/^[0-9.]+$/g));
-        console.log('------ response ---------', response);
+        this.parseInstructions();
       })
     },
-    getMealById() {
-      // eslint-disable-next-line no-undef
-      axios.get(`${this.baseUrl}/lookup.php?i=52997`).then((response) => {
-        this.meal = {};
-        this.instructions = [];
-        this.meal = response.data.meals[0];
-        this.instructions = this.meal.strInstructions.split("\r\n").filter(item => item && !item.match(/(step|STEP|Step) \d+$/g) && !item.match(/^[0-9.]+$/g));
-        console.log('------ response ---------', response);
-      })
-    },
-    getMealByName: _debounce(function () {
-      // eslint-disable-next-line no-undef
-      axios.get(`${this.baseUrl}/search.php?s=${this.searchQuery}`).then((response) => {
-        console.log('------ response ---------', response.data);
 
-        this.meals = [];
-        this.originalMeals = [];
-        this.originalMeals = response.data.meals;
-        this.meals = _groupBy(response.data.meals, 'strCategory');
+    getMealById(id) {
+      axios.get(`${this.baseUrl}/lookup.php?i=${id}`).then((response) => {
+        this.clearVariablesData();
+        this.meal = response.data.meals[0];
+        this.parseInstructions();
+        this.closeModal();
+        this.clearSearch();
+      })
+    },
+
+    getMealByName: _debounce(function (searchQuery) {
+      axios.get(`${this.baseUrl}/search.php?s=${searchQuery}`).then((response) => {
+        if (response.data.meals) {
+          this.originalMeals = response.data.meals;
+          this.meals = _groupBy(this.originalMeals, 'strCategory');
+        }
       })
     }, 500),
 
-    selectMeal(id) {
-      this.meal = this.originalMeals.filter((meal) => meal.idMeal === id)[0];
-      this.instructions = this.meal.strInstructions.split("\r\n").filter(item => item && !item.match(/(step|STEP|Step) \d+$/g) && !item.match(/^[0-9.]+$/g));
-      this.searchQuery = null;
+    getCompleteSearchResults: _debounce(function (searchQuery) {
+      if (!searchQuery) {
+        return;
+      }
+
+      this.clearSearchVariablesData();
+      // Seach for main ingredient
+      this.searchWithMultipleTypes('filter.php?i', searchQuery);
+
+      // Search for category
+      this.searchWithMultipleTypes('filter.php?c', searchQuery);
+    }, 500),
+
+    searchWithMultipleTypes(parameter, searchQuery) {
+      axios.get(`${this.baseUrl}/${parameter}=${searchQuery}`).then((response) => {
+        if (response.data.meals) {
+          this.originalMeals.push(response.data.meals);
+          this.meals = this.originalMeals.flat();
+        }
+      })
     },
 
     getIngredientItem(index) {
@@ -165,6 +179,53 @@ export default {
       }
 
       return `${this.meal[`strMeasure${index}`]} ${this.meal[`strIngredient${index}`]}`;
+    },
+
+    generatePDF() {
+      const doc = new jsPDF();
+
+      doc.setFontSize(18);
+      doc.text(this.meal.strMeal, 10, 10);
+      doc.setFontSize(16);
+      doc.text(`Category: ${this.meal.strCategory}`, 10, 20);
+      doc.text('Ingredients', 10, 35);
+      doc.setFontSize(12);
+
+      this.line = 40;
+      for(let i = 0; i < 20; i ++) {
+        if (this.getIngredientItem(i)) {
+          this.line += 7;
+          doc.text(`${this.getIngredientItem(i)}`, 10, this.line);
+        }
+      }
+
+      doc.setFontSize(16);
+      doc.text('How to prepare', 10, this.line += 10);
+      doc.setFontSize(12);
+      doc.text(`${this.meal.strInstructions.replace("\r\n", ' ')}`, 10, this.line += 10, { maxWidth: 190 });
+      doc.save("recipe.pdf");
+    },
+
+    clearSearch() {
+      this.searchQuery = '';
+      this.clearSearchVariablesData();
+    },
+    clearSearchVariablesData() {
+      this.meals = [];
+      this.originalMeals = [];
+    },
+    clearVariablesData() {
+      this.meal = {};
+      this.instructions = [];
+    },
+    parseInstructions() {
+      this.instructions = this.meal.strInstructions.split("\r\n").filter(item => item && !item.match(/(step|STEP|Step) \d+$/g) && !item.match(/^[0-9.]+$/g));
+    },
+    openModal () {
+      this.$modal.show('orderModal');
+    },
+    closeModal () {
+      this.$modal.hide('orderModal');
     },
   },
 }
