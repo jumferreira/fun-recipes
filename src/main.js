@@ -4,8 +4,8 @@ import VModal from 'vue-js-modal';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faXmark, faPrint } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import Search from "@/components/Search";
-import App from './App.vue';
+import Search from "@/assets/js/components/Search";
+import App from './assets/js/App.vue';
 import './assets/sass/index.scss';
 // import './plugins/axios';
 

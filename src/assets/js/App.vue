@@ -4,7 +4,7 @@
       <header class="header">
         <div class="header__logo">
           <a href="/">
-            <img class="header__image" src="./assets/img/header_logo.png" alt="recipes">
+            <img class="header__image" src="../img/header_logo.png" alt="recipes">
           </a>
         </div>
 
