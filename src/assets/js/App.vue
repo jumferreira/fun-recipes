@@ -91,7 +91,7 @@
       </div>
 
       <modal
-          name="orderModal"
+          name="searchModal"
           :width="365"
           :height="360"
       >
@@ -120,11 +120,14 @@
 <script>
 import axios from 'axios';
 import { jsPDF } from "jspdf";
+import SearchBar from './components/Search';
 import { debounce as _debounce, groupBy as _groupBy } from 'lodash';
 import { DEMONYM_AND_COUNTRIES } from '@/utils/constants/countries';
 export default {
   name: 'App',
-  components: {},
+  components: {
+    'search-bar': SearchBar,
+  },
   data: () => ({
     baseUrl: 'https://www.themealdb.com/api/json/v1/1',
     meal: {},
@@ -226,6 +229,10 @@ export default {
     },
 
     getCountryName(demonym){
+      if (!DEMONYM_AND_COUNTRIES[demonym]) {
+        return;
+      }
+
       return DEMONYM_AND_COUNTRIES[demonym].toLowerCase();
     },
 
@@ -242,13 +249,17 @@ export default {
       this.instructions = [];
     },
     parseInstructions() {
+      if (!this.meal.strInstructions) {
+        return ;
+      }
+
       this.instructions = this.meal.strInstructions.split("\r\n").filter(item => item && !item.match(/(step|STEP|Step) \d+$/g) && !item.match(/^[0-9.]+$/g));
     },
     openModal () {
-      this.$modal.show('orderModal');
+      this.$modal.show('searchModal');
     },
     closeModal () {
-      this.$modal.hide('orderModal');
+      this.$modal.hide('searchModal');
     },
   },
 }
