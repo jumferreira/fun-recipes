@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import Search from "@/assets/js/components/Search";
 import App from './assets/js/App.vue';
 import './assets/sass/index.scss';
-// import './plugins/axios';
 
 library.add({ faXmark, faPrint });
 Vue.use(axios);

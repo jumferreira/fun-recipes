@@ -6,8 +6,6 @@ module.exports = defineConfig({
     proxy: 'http://localhost:8080'
   },
   css: {
-    loaderOptions: {
-      sass: {},
-    }
+    extract: false,
   },
 });

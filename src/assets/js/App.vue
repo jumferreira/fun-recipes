@@ -28,7 +28,15 @@
 
       <div class="recipe">
         <div class="recipe__content">
-          <p class="recipe__content-category">{{ meal.strCategory }}</p>
+          <p class="recipe__content-category flex items-center">
+            {{ meal.strCategory }}
+            <img
+                :src="`https://countryflagsapi.com/svg/${getCountryName(meal.strArea)}`"
+                :alt="`${getCountryName(meal.strArea)} flag`"
+                :title="`${getCountryName(meal.strArea)} flag`"
+            />
+          </p>
+
           <h1 class="recipe__content-name">{{ meal.strMeal }}</h1>
 
           <img class="recipe__content-image" :src="meal.strMealThumb" alt="">
@@ -69,6 +77,16 @@
               :src="videoUrl"
               :title="meal.strMeal"
           ></iframe>
+
+          <a
+              v-if="meal.strSource"
+              :href="meal.strSource"
+              class="recipe__information-title pt-8 underline block text-center"
+              target="_blank"
+          >
+            Recipe Source
+          </a>
+
         </div>
       </div>
 
@@ -103,6 +121,7 @@
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 import { debounce as _debounce, groupBy as _groupBy } from 'lodash';
+import { DEMONYM_AND_COUNTRIES } from '@/utils/constants/countries';
 export default {
   name: 'App',
   components: {},
@@ -157,7 +176,7 @@ export default {
       }
 
       this.clearSearchVariablesData();
-      // Seach for main ingredient
+      // Search for main ingredient
       this.searchWithMultipleTypes('filter.php?i', searchQuery);
 
       // Search for category
@@ -204,6 +223,10 @@ export default {
       doc.setFontSize(12);
       doc.text(`${this.meal.strInstructions.replace("\r\n", ' ')}`, 10, this.line += 10, { maxWidth: 190 });
       doc.save("recipe.pdf");
+    },
+
+    getCountryName(demonym){
+      return DEMONYM_AND_COUNTRIES[demonym].toLowerCase();
     },
 
     clearSearch() {

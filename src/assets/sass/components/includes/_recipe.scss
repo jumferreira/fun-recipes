@@ -17,6 +17,13 @@
                 mb-2.5
                 uppercase
                 tracking-widest;
+
+            img {
+                @apply
+                    w-auto
+                    h-4
+                    ml-1.5;
+                };
         }
 
         &-name {

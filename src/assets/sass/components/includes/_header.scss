@@ -25,12 +25,15 @@
 
         button {
             @apply
-                w-24
-                ml-1.5
+                w-auto
+                ml-4
                 underline
                 uppercase
                 tracking-widest
                 text-sm;
+            max-width: 6rem;
+            width: auto;
+            min-width: 1rem;
 
             &:focus { @apply outline-none; }
         }
