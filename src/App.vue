@@ -4,13 +4,13 @@
       <header class="header">
         <div class="header__logo">
           <a href="/">
-            <img class="header__image" src="../img/header_logo.png" alt="recipes">
+            <img class="header__image" src="@/assets/img/header_logo.png" alt="recipes">
           </a>
         </div>
 
         <div class="header__search">
           <search-bar
-              :results="meals"
+              :results="funRecipes.meals"
               :hasCategory="true"
               @search="getMealByName"
               @item-selected="getMealById"
@@ -19,8 +19,13 @@
         </div>
 
         <div class="header__buttons">
+          <button title="Get new recipe" @click="changeRecipe">
+            <font-awesome-icon icon="fa-solid fa-rotate" class="text-2xl"/>
+          </button>
+
           <button @click="openModal">advanced search</button>
-          <button @click="generatePDF">
+
+          <button title="Print recipe" @click="generatePDF">
             <font-awesome-icon icon="fa-solid fa-print" class="text-2xl"/>
           </button>
         </div>
@@ -29,24 +34,24 @@
       <div class="recipe">
         <div class="recipe__content">
           <p class="recipe__content-category flex items-center">
-            {{ meal.strCategory }}
+            {{ funRecipes.meal.strCategory }}
             <img
-                :src="`https://countryflagsapi.com/svg/${getCountryName(meal.strArea)}`"
-                :alt="`${getCountryName(meal.strArea)} flag`"
-                :title="`${getCountryName(meal.strArea)} flag`"
+                :src="`https://countryflagsapi.com/svg/${getCountryName(funRecipes.meal.strArea)}`"
+                :alt="`${getCountryName(funRecipes.meal.strArea)} flag`"
+                :title="`${getCountryName(funRecipes.meal.strArea)} flag`"
             />
           </p>
 
-          <h1 class="recipe__content-name">{{ meal.strMeal }}</h1>
+          <h1 class="recipe__content-name">{{ funRecipes.meal.strMeal }}</h1>
 
-          <img class="recipe__content-image" :src="meal.strMealThumb" alt="">
+          <img class="recipe__content-image" :src="funRecipes.meal.strMealThumb" alt="">
 
           <div class="recipe__content-method">
             <h3 class="recipe__content-title">How to prepare</h3>
 
             <ul class="recipe__content-preparation">
               <li
-                  v-for="(step, index) in instructions"
+                  v-for="(step, index) in funRecipes.instructions"
                   :key="`instruction-${index + 1}`"
               >
                 <div class="flex">
@@ -70,17 +75,17 @@
             </li>
           </ul>
 
-          <p v-if="meal.strYoutube" class="recipe__information-title">Recipe video</p>
+          <p v-if="funRecipes.meal.strYoutube" class="recipe__information-title">Recipe video</p>
           <iframe
-              v-if="meal.strYoutube"
+              v-if="funRecipes.meal.strYoutube"
               class="recipe__information-video"
               :src="videoUrl"
-              :title="meal.strMeal"
+              :title="funRecipes.meal.strMeal"
           ></iframe>
 
           <a
-              v-if="meal.strSource"
-              :href="meal.strSource"
+              v-if="funRecipes.meal.strSource"
+              :href="funRecipes.meal.strSource"
               class="recipe__information-title pt-8 underline block text-center"
               target="_blank"
           >
@@ -106,7 +111,7 @@
 
           <div class="modal_body">
             <search-bar
-                :results="meals"
+                :results="funRecipes.meals"
                 @search="getCompleteSearchResults"
                 @item-selected="getMealById"
                 @clear-results="clearSearchVariablesData"
@@ -119,10 +124,11 @@
 </template>
 <script>
 import axios from 'axios';
-import { jsPDF } from "jspdf";
+import { jsPDF } from 'jspdf';
 import SearchBar from './components/Search';
 import { debounce as _debounce, groupBy as _groupBy } from 'lodash';
 import { DEMONYM_AND_COUNTRIES } from '@/utils/constants/countries';
+import { mapState } from 'vuex';
 export default {
   name: 'App',
   components: {
@@ -130,15 +136,13 @@ export default {
   },
   data: () => ({
     baseUrl: 'https://www.themealdb.com/api/json/v1/1',
-    meal: {},
-    meals: [],
-    originalMeals: [],
-    instructions: [],
     line: 0,
   }),
   computed: {
+    ...mapState(['funRecipes']),
+
     videoUrl() {
-      const data = this.meal.strYoutube.split('watch?v=');
+      const data = this.funRecipes.meal.strYoutube.split('watch?v=');
       return `${data[0]}embed/${data[1]}`;
     },
   },
@@ -149,7 +153,7 @@ export default {
     getRandomMeal() {
       axios.get(`${this.baseUrl}/random.php`).then((response) => {
         this.clearVariablesData()
-        this.meal = response.data.meals[0];
+        this.$store.dispatch('setMeal', response.data.meals[0]);
         this.parseInstructions();
       })
     },
@@ -157,7 +161,7 @@ export default {
     getMealById(id) {
       axios.get(`${this.baseUrl}/lookup.php?i=${id}`).then((response) => {
         this.clearVariablesData();
-        this.meal = response.data.meals[0];
+        this.$store.dispatch('setMeal', response.data.meals[0]);
         this.parseInstructions();
         this.closeModal();
         this.clearSearch();
@@ -167,8 +171,8 @@ export default {
     getMealByName: _debounce(function (searchQuery) {
       axios.get(`${this.baseUrl}/search.php?s=${searchQuery}`).then((response) => {
         if (response.data.meals) {
-          this.originalMeals = response.data.meals;
-          this.meals = _groupBy(this.originalMeals, 'strCategory');
+          this.$store.dispatch('setOriginalMeals', response.data.meals);
+          this.$store.dispatch('setMeals', _groupBy(this.funRecipes.originalMeals, 'strCategory'));
         }
       })
     }, 500),
@@ -189,27 +193,28 @@ export default {
     searchWithMultipleTypes(parameter, searchQuery) {
       axios.get(`${this.baseUrl}/${parameter}=${searchQuery}`).then((response) => {
         if (response.data.meals) {
-          this.originalMeals.push(response.data.meals);
-          this.meals = this.originalMeals.flat();
+          this.$store.dispatch('pushToOriginalMeals', response.data.meals);
+          const flattenData = this.funRecipes.originalMeals;
+          this.$store.dispatch('setMeals', flattenData.flat());
         }
       })
     },
 
     getIngredientItem(index) {
-      if (!this.meal[`strMeasure${index}`] || !this.meal[`strIngredient${index}`]) {
+      if (!this.funRecipes.meal[`strMeasure${index}`] || !this.funRecipes.meal[`strIngredient${index}`]) {
         return;
       }
 
-      return `${this.meal[`strMeasure${index}`]} ${this.meal[`strIngredient${index}`]}`;
+      return `${this.funRecipes.meal[`strMeasure${index}`]} ${this.funRecipes.meal[`strIngredient${index}`]}`;
     },
 
     generatePDF() {
       const doc = new jsPDF();
 
       doc.setFontSize(18);
-      doc.text(this.meal.strMeal, 10, 10);
+      doc.text(this.funRecipes.meal.strMeal, 10, 10);
       doc.setFontSize(16);
-      doc.text(`Category: ${this.meal.strCategory}`, 10, 20);
+      doc.text(`Category: ${this.funRecipes.meal.strCategory}`, 10, 20);
       doc.text('Ingredients', 10, 35);
       doc.setFontSize(12);
 
@@ -224,7 +229,7 @@ export default {
       doc.setFontSize(16);
       doc.text('How to prepare', 10, this.line += 10);
       doc.setFontSize(12);
-      doc.text(`${this.meal.strInstructions.replace("\r\n", ' ')}`, 10, this.line += 10, { maxWidth: 190 });
+      doc.text(`${this.funRecipes.meal.strInstructions.replace("\r\n", ' ')}`, 10, this.line += 10, { maxWidth: 190 });
       doc.save("recipe.pdf");
     },
 
@@ -232,8 +237,11 @@ export default {
       if (!DEMONYM_AND_COUNTRIES[demonym]) {
         return;
       }
-
       return DEMONYM_AND_COUNTRIES[demonym].toLowerCase();
+    },
+
+    changeRecipe() {
+      this.getRandomMeal();
     },
 
     clearSearch() {
@@ -241,19 +249,17 @@ export default {
       this.clearSearchVariablesData();
     },
     clearSearchVariablesData() {
-      this.meals = [];
-      this.originalMeals = [];
+      this.$store.dispatch('clearSearchVariables');
     },
     clearVariablesData() {
-      this.meal = {};
-      this.instructions = [];
+      this.$store.dispatch('clearSimpleVariables');
     },
     parseInstructions() {
-      if (!this.meal.strInstructions) {
-        return ;
+      if (!this.funRecipes.meal.strInstructions) {
+        return;
       }
 
-      this.instructions = this.meal.strInstructions.split("\r\n").filter(item => item && !item.match(/(step|STEP|Step) \d+$/g) && !item.match(/^[0-9.]+$/g));
+      this.$store.dispatch('setInstructions', this.funRecipes.meal.strInstructions.split("\r\n").filter(item => item && !item.match(/(step|STEP|Step) \d+$/g) && !item.match(/^[0-9.]+$/g)));
     },
     openModal () {
       this.$modal.show('searchModal');

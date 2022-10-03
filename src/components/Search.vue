@@ -13,46 +13,40 @@
       </button>
     </div>
 
-
-    <template v-if="searchHasResult">
-      <div v-if="hasCategory" class="search__results">
-        <ul>
-          <li
-              v-for="(item, key, index) in results"
-              :key="`search-result-category-${index}`"
-              class="search__results-item"
-          >
-            <p class="search__results-item-category">{{ key }}</p>
-            <button
-                v-for="(result, index) in item"
-                :key="`search-result-item-${index}`"
-                class="search__results-item-meal"
-                @click="selectItem(result.idMeal)"
-            >
-              {{ result.strMeal }}
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <div v-if="!hasCategory" class="search__results">
-        <ul>
-          <li
-              v-for="(result, index) in results"
+    <div v-if="searchHasResult" class="search__results">
+      <ul v-if="hasCategory">
+        <li
+            v-for="(item, key, index) in results"
+            :key="`search-result-category-${index}`"
+            class="search__results-item"
+        >
+          <p class="search__results-item-category">{{ key }}</p>
+          <button
+              v-for="(result, index) in item"
               :key="`search-result-item-${index}`"
-              class="search__results-item"
+              class="search__results-item-meal"
+              @click="selectItem(result.idMeal)"
           >
-            <button
-                class="search__results-item-meal"
-                @click="selectItem(result.idMeal)"
-            >
-              {{ result.strMeal }}
-            </button>
-          </li>
-        </ul>
-      </div>
+            {{ result.strMeal }}
+          </button>
+        </li>
+      </ul>
 
-    </template>
+      <ul v-else-if="!hasCategory">
+        <li
+            v-for="(result, index) in results"
+            :key="`search-result-item-${index}`"
+            class="search__results-item"
+        >
+          <button
+              class="search__results-item-meal"
+              @click="selectItem(result.idMeal)"
+          >
+            {{ result.strMeal }}
+          </button>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -69,9 +63,11 @@ export default {
       default: false,
     },
   },
-  data: () => ({
-    searchQuery: null,
-  }),
+  data() {
+    return {
+      searchQuery: null,
+    }
+  },
   computed: {
     searchHasResult() {
       return this.searchQuery && Object.keys(this.results).length > 0;
@@ -83,6 +79,7 @@ export default {
     },
     selectItem(id) {
       this.$emit('item-selected', id);
+      this.clearSearch();
     },
     clearSearch() {
       this.searchQuery = '';

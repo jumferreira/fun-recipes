@@ -117,9 +117,8 @@
     }
 }
 
-@media screen and (min-width: $md) {
+@media screen and (min-width: $md) {}
 
-}
 @media screen and (min-width: $lg) {
     .recipe {
         @apply flex-row;
@@ -128,10 +127,10 @@
         &__content {
             @apply w-2/3;
 
-            &-name { @apply w-11/12; }
+            &-name { @apply w-4/5; }
 
             &-image {
-                top: 4%;
+                @apply top-9;
                 right: 32%;
             }
         }
